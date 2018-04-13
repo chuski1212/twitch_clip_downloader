@@ -1,45 +1,20 @@
 # Twitch Clip Downloader
 
-## Getting a local environment up
+## What it is?
 
-1. Populate your `conf/envvars.sh` file. Find someone who knows how to if you don't.
-2. Start local MySQL if you're using a local DB (you should), otherwise point env vars to staging. You can do this with the [backend-deps](https://github.com/Glovo/glovo-backend-deps) repo for now.
-4. Build [the avro schema registry docker image](https://github.com/Glovo/avro-schema-registry) with the `avro-schema-registry` tag by cloning the repo and running `docker build . -t avro-schema-registry` inside it.
-5. Start docker compose with `docker-compose -f docker-compose-dev.yml --project-name=glovo-backend up`
-7. Run `./scripts/localstack-setup-streams.sh`
-8. Run `./scripts/localstack-setup-registry.sh`
-6. Start the server in development mode with `./console run`
-7. Happy coding!
+Twitch Clip Downloader is a simple python script to download automatically top clips of a game on Twitch (only selected language).
 
-## Dependencies on external services
+## Settings 
 
-- All things amazon: You should be running [localstack](https://github.com/localstack/localstack) through the provided docker compose file. Remember to:
-  - Specify `KINESIS_USE_LOCALSTACK="true"` on your envvars.sh file
-  - Run the `script/localstack-setup-xxxx.sh` scripts whenever you restart the docker compose containers.
-  - Ensure you have dummy local environment variables on your envvars.sh file. Localstack doesn't authenticate them but the Amazon libraries require them to be present. Do this by adding `AWS_ACCESS_KEY_ID="dienamerequie"` and `AWS_SECRET_ACCESS_KEY="dienamerequie"` to your envvars.sh (the values are placeholders)
-- MySQL: You should be running a local mysql docker image with a copy of staging data in order to test.
-- Redis: You should be running a local redis docker image through the provided docker compose file.
+You MUST add a settings.py file to the root of the project to run the tool. This file must contain this variables (all strings, except LANGS):
 
-## Applying migrations with pt-online-schema-change
+- CLIENTID: Your twitch app client_id. More info https://blog.twitch.tv/client-id-required-for-kraken-api-calls-afbb8e95f843
+- BASEDIR: The base directory where you want to download your files.
+- GAME: The clips game.
+- PERIOD: The lifetime of the clips.
+- LIMIT: The number of clips you want obtain.
+- LANGS: List of languages you wanna search. Each language implies one iteration of the tool.
 
-Run this from Control server.
+## What else?
 
-```bash
-# Do it inside screen just in case you lose connection
-screen -S schema_change
-
-# Apply the migration (see how the table appears in the DSN and not in the alter)
-pt-online-schema-change\
-    --execute\
-    --recursion-method='dsn=D=glovo_live,t=pt_dsn'\
-    --max-lag 3\
-    --alter-foreign-keys-method auto\
-    --progress percentage,1\
-    --alter "ADD COLUMN [column] INT DEFAULT NULL"\
-    h=[db_host],D=[database],t=[table],u=[user],p=[password]
-
-# detach from screen with CTRL + A + D (if you want)
-
-# go back to session with
-screen -r schema_change
-```
+HAVE FUN :)
